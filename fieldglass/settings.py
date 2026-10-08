@@ -18,9 +18,9 @@ if not SECRET_KEY:
         raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DEBUG is disabled.')
     SECRET_KEY = secrets.token_urlsafe(50)
 
-ALLOWED_HOSTS = [vr-class-production.up.railway.app
+ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    for host in os.getenv('ALLOWED_HOSTS', 'vr-class-production.up.railway.app').split(',')
     if host.strip()
 ]
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
