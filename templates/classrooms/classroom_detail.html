@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ classroom.name }} — VRC Learn{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+  <div>
+    <h2>{{ classroom.name }}</h2>
+    <p class="text-muted mb-0">{{ classroom.subject }}</p>
+    {% if is_owner %}<p class="small">Join code: <code>{{ classroom.join_code }}</code></p>{% endif %}
+  </div>
+
+  {% if is_owner %}
+    {% if active_session %}
+      <a href="{% url 'classrooms:virtual_classroom' active_session.pk %}" class="btn btn-dark">Re-enter live session</a>
+    {% else %}
+      <form method="post" action="{% url 'classrooms:start_session' classroom.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-dark">Start a live session</button>
+      </form>
+    {% endif %}
+  {% else %}
+    {% if active_session %}
+      <a href="{% url 'classrooms:virtual_classroom' active_session.pk %}" class="btn btn-dark">Join live session</a>
+    {% else %}
+      <span class="badge text-bg-secondary align-self-center">No live session right now</span>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div class="row g-4">
+  <div class="col-md-7">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Lessons</h5>
+        {% for lesson in lessons %}
+          <div class="border-bottom py-2">
+            <strong>{{ lesson.title }}</strong>
+            <p class="small text-muted mb-0">{{ lesson.description }}</p>
+          </div>
+        {% empty %}
+          <p class="text-muted">No lessons added yet.</p>
+        {% endfor %}
+
+        {% if is_owner %}
+        <form method="post" action="{% url 'classrooms:add_lesson' classroom.pk %}" class="mt-3">
+          {% csrf_token %}
+          {% for field in lesson_form %}
+            <div class="mb-2">
+              <label class="form-label small">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-sm btn-outline-dark">Add lesson</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Roster</h5>
+        {% for enrollment in students %}
+          <div class="py-1">{{ enrollment.student.full_name }}</div>
+        {% empty %}
+          <p class="text-muted">No students enrolled yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

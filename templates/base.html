@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}VRC Learn — Virtual Reality Classroom with Expression Insights{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="{% url 'classrooms:dashboard' %}">VRC Learn</a>
+    {% if user.is_authenticated %}
+    <div class="d-flex align-items-center gap-3">
+      <span class="text-light small">{{ user.full_name }} · {{ user.get_role_display }}</span>
+      <form action="{% url 'accounts:logout' %}" method="post" class="m-0">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-light" type="submit">Log out</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="container py-4">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

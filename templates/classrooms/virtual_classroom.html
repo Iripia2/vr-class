@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Live — {{ classroom.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <h2>{{ classroom.name }}</h2>
+    <p class="text-muted mb-0">Session #{{ session.pk }}{% if session.lesson %} — {{ session.lesson.title }}{% endif %}</p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if is_owner %}
+      <a href="{% url 'monitoring:session_report' session.pk %}" class="btn btn-outline-dark">Class report</a>
+      <form method="post" action="{% url 'classrooms:end_session' session.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">End session</button>
+      </form>
+    {% else %}
+      <a href="{% url 'classrooms:classroom_detail' classroom.pk %}" class="btn btn-outline-dark">Leave</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if consent and session.is_active %}
+<section class="consent-banner mb-3" aria-labelledby="consent-title">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+      <h3 class="h5 mb-1" id="consent-title">Optional facial-expression estimates</h3>
+      <p class="mb-2" id="consent-subtitle">Camera monitoring is off. You can use the classroom fully without it.</p>
+      <p class="small mb-0">Expression estimates describe observable facial-expression patterns only. They do not prove how a person feels internally.</p>
+    </div>
+    <video id="webcam-preview" class="webcam-preview" autoplay muted playsinline aria-label="Your camera preview" style="display:none;"></video>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mt-3" role="group" aria-label="Monitoring consent options">
+    <button id="continue-without-monitoring" type="button" class="btn btn-outline-dark">Continue Without Monitoring</button>
+    <button id="review-privacy-details" type="button" class="btn btn-outline-dark" aria-expanded="false" aria-controls="privacy-details">Review Privacy Details</button>
+    <button id="consent-enable" type="button" class="btn btn-dark">I Consent &amp; Enable Monitoring</button>
+  </div>
+  <div id="privacy-details" class="small mt-3" hidden>
+    <p class="mb-1"><strong>Observed Data:</strong> Camera frames are processed in your browser and are never uploaded or stored. You can stop monitoring at any time.</p>
+    <p class="mb-0"><strong>AI Interpretation:</strong> A facial-expression pattern and confidence estimate may be sent for class-level aggregation. It is not a measure of learning, attention, or internal emotion, and is never used for grading, attendance, ranking, or discipline.</p>
+  </div>
+  <p id="monitoring-status" class="small mt-3 mb-0" role="status" aria-live="polite">Monitoring is off until you choose to enable it.</p>
+</section>
+{% endif %}
+
+{% if checkin_form and session.is_active %}
+<section class="mb-4" aria-labelledby="checkin-title">
+  <h3 class="h5" id="checkin-title">Optional class check-in</h3>
+  <p class="small text-muted">Share what would help your learning right now. This is your self-report, not an AI measurement of emotion or attention. Your account is not attached to the saved response; results are shown only as class aggregates, with small categories withheld.</p>
+  <form method="post" action="{% url 'monitoring:session_checkin' session.pk %}">
+    {% csrf_token %}
+    <fieldset>
+      <legend class="visually-hidden">Choose an optional class check-in response</legend>
+      <div class="d-flex flex-wrap gap-3 mb-3">
+        {% for choice in checkin_form.response %}
+          <div class="form-check">
+            {{ choice.tag }}
+            <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <button type="submit" class="btn btn-outline-dark">Share check-in</button>
+  </form>
+</section>
+{% endif %}
+
+<canvas id="classroom-canvas"></canvas>
+<p class="small text-muted mt-2">Drag to look around, scroll to zoom. This is a browser-based 3D scene — no headset required.</p>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="{% static 'js/classroom3d.js' %}"></script>
+
+{% if consent and session.is_active %}
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+  window.FIELDGLASS = {
+    sessionId: {{ session.pk }},
+    classroomId: {{ classroom.pk }},
+    consentActive: {{ consent.active|yesno:'true,false' }},
+    toggleConsentUrl: "{% url 'monitoring:toggle_consent' session.pk %}",
+    recordEmotionUrl: "{% url 'monitoring:record_emotion' %}",
+  };
+</script>
+<script src="{% static 'js/emotion.js' %}"></script>
+{% endif %}
+{% endblock %}

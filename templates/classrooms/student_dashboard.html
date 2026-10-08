@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}My classes — VRC Learn{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>My classes</h2>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Join a classroom</h5>
+    <form method="post" action="{% url 'classrooms:join_classroom' %}" class="d-flex gap-2">
+      {% csrf_token %}
+      <input type="text" name="join_code" class="form-control" placeholder="Enter join code" required>
+      <button class="btn btn-dark" type="submit">Join</button>
+    </form>
+  </div>
+</div>
+
+{% if enrollments %}
+<div class="row g-3">
+  {% for enrollment in enrollments %}
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ enrollment.classroom.name }}</h5>
+        <p class="card-text text-muted">{{ enrollment.classroom.subject }}</p>
+        <a href="{% url 'classrooms:classroom_detail' enrollment.classroom.pk %}" class="btn btn-sm btn-outline-dark">Open</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">You haven't joined any classrooms yet. Ask your teacher for a join code.</p>
+{% endif %}
+{% endblock %}

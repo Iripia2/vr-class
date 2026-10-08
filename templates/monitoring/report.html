@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Class report — {{ session.classroom.name }}{% endblock %}
+{% block content %}
+<h2>Class-level report</h2>
+<p class="text-muted">{{ session.classroom.name }} — session #{{ session.pk }}</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card"><div class="card-body">
+      <div class="fs-3 fw-semibold">{{ enrolled }}</div>
+      <div class="text-muted small">Students enrolled</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card"><div class="card-body">
+      <div class="fs-3 fw-semibold">{{ opted_in }}</div>
+      <div class="text-muted small">Opted into camera analysis</div>
+    </div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="card"><div class="card-body">
+      <div class="fs-3 fw-semibold">{{ total }}</div>
+      <div class="text-muted small">Total detections this session</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Facial Expression Estimate (AI Interpretation, class-level aggregate)</h5>
+    <p class="small text-muted">Expression estimates describe observable facial-expression patterns only. They do not prove how a person feels internally.</p>
+    {% if total > 0 %}
+      {% for signal in signal_rows %}
+        {% if signal.count %}
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div style="width:180px;" class="small">{{ signal.label }}</div>
+          <div class="flex-grow-1 bg-light rounded" style="height:16px;">
+            <div class="bg-dark rounded" style="height:16px; width: {% widthratio signal.count total 100 %}%;"></div>
+          </div>
+          <div class="small text-muted" style="width:40px;">{{ signal.count }}</div>
+          <div class="small text-muted" style="width:100px;">{{ signal.confidence }}% avg. confidence</div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">No signals recorded. Monitoring may be disabled, unavailable, or not yet started.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Student self-reported learning needs</h5>
+    <p class="small text-muted">These are voluntary student responses, not AI inferences. No account identifiers are stored with responses. Breakdown categories are hidden unless each displayed category has at least five responses.</p>
+    {% if checkin_breakdown_visible %}
+      <p class="small">{{ checkin_total }} responses</p>
+      {% for row in checkin_rows %}
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span>{{ row.label }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted mb-0">No breakdown is shown yet. At least five responses, with at least five in each reported category, are required to protect privacy.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">What this report does not tell you</h5>
+    <ul class="mb-0">
+      <li>Only {{ opted_in }} of {{ enrolled }} students enabled monitoring for this session. Results are shown as class-level counts, not individual labels or rankings.</li>
+      <li>Observed Data is limited to confidence-scored facial-expression patterns. Low-confidence signals are labeled separately.</li>
+      <li>Signals are never used for grading, discipline, attendance, ranking, profiling, admissions, or hiring.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
